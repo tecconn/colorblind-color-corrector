@@ -1,3 +1,33 @@
+function Matrix() {
+	this.values = arguments;
+}
+
+Matrix.prototype.multiply = function (matrix) {
+	var _thisRows = this.values.length;
+	var _thisColumns = this.values[0].length;
+	var matrixColumns = matrix.values[0].length;
+	var multiple = new Array(_thisRows);  // initialize array of rows
+	for (var r = 0; r < _thisRows; ++r) {
+		multiple[r] = new Array(matrixColumns); // initialize the current row
+		for (var c = 0; c < matrixColumns; ++c) {
+			multiple[r][c] = 0;             // initialize the current cell
+			for (var i = 0; i < _thisColumns; ++i) {
+				multiple[r][c] += this.values[r][i] * matrix.values[i][c];
+			}
+		}
+	}
+	return multiple;
+};
+
+Matrix.prototype.subtract = function(matrix) {
+	//TODO
+};
+
+Matrix.prototype.add = function(matrix) {
+	//TODO
+};
+
+
 /**
  * Defines an RGBA Color
  *
@@ -19,7 +49,7 @@ function Color(red, green, blue, alpha) {
  *
  * @return {string} Hexadecimal representation of a {@link Color}
  */
-Color.prototype.getHexadecimal = function() {
+Color.prototype.getHexadecimal = function () {
 	var hexadecimal = "#";
 	hexadecimal += this.red ? this.red.toString(16) : "00";
 	hexadecimal += this.green ? this.green.toString(16) : "00";
@@ -32,13 +62,28 @@ Color.prototype.getHexadecimal = function() {
  *
  * @return {string} RGBA representation of a {@link Color}
  */
-Color.prototype.getRgba = function() {
+Color.prototype.getRgba = function () {
 	var rgba = "rgba(";
 	rgba += (this.red ? this.red : 0) + ",";
 	rgba += (this.green ? this.green : 0) + ",";
 	rgba += (this.blue ? this.blue : 0) + ",";
 	rgba += (this.alpha ? this.alpha : 0) + ")";
 	return rgba;
+};
+
+Color.modifyBrightness = function (color, factor) {
+	var colorMatrix = new Matrix(color.red, color.green, color.blue);
+	if (factor < 0) {
+		factor = 1 + factor;
+		colorMatrix.multiply(factor);
+	}
+	else {
+		var rgbMatrix = new Matrix(255, 255, 255);
+		rgbMatrix.subtract(colorMatrix);
+		rgbMatrix.multiply(factor);
+		colorMatrix.add(rgbMatrix);
+	}
+	return Color.apply(colorMatrix);
 };
 
 /**
@@ -54,7 +99,7 @@ function ColorblindnessType() {
  *
  * @return {{DEUTERANOPIA: string, PROTANOPIA: string, TRITANOPIA: string}}
  */
-ColorblindnessType.getEnum = function() {
+ColorblindnessType.getEnum = function () {
 	return {
 		DEUTERANOPIA: "DEUTERANOPIA",
 		PROTANOPIA: "PROTANOPIA",
@@ -77,7 +122,7 @@ function ColorCorrector(element, color) {
 /**
  * Performs color correction to the {@link #element} based on the {@link #color}
  */
-ColorCorrector.prototype.correct = function() {
+ColorCorrector.prototype.correct = function () {
 	this.element.style.color = this._colorShift.getHexadecimal();
 };
 
@@ -92,7 +137,7 @@ function ColorblindColorCorrector(element, colorblindnessType) {
 	this.colorblindnessType = colorblindnessType;
 }
 
-ColorblindColorCorrector.prototype.correct = function() {
+ColorblindColorCorrector.prototype.correct = function () {
 	ColorCorrector.prototype.correct.call(this);
 };
 
