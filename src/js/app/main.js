@@ -1,40 +1,136 @@
+function AssertError(assertion, message) {
+	this.name = assertion;
+	this.message = message || ''; //TODO Complete this
+	this.stack = (new Error()).stack;
+}
+
+/**
+ * Collection of assertion helpers
+ *
+ * @constructor
+ */
+function Assert() {
+
+}
+
+/**
+ * Asserts that the object must not be null
+ * @param obj {*} Object to check if null
+ * @param message {string=} Text to appear in error if object is null
+ */
+Assert.notNull = function(obj, message) {
+	if (obj === null)
+		throw new Error("Object must not be null!");
+};
+
+
+/**
+ * Performs a deep copy on an {@link Array}
+ *
+ * @param arr {Array} Array to make a deep copy of
+ * @return {Array} Deep copy of the input array
+ */
+Array.deepCopy = function(arr) {
+	var output = [];
+	if (arr) {
+		if (Array.isArray(arr[0])) {
+			for (var i = 0; i < arr.length; i++)
+				output.push(Array.deepCopy(arr[i]));
+		}
+		else {
+			for (i = 0; i < arr.length; i++)
+				output.push(arr[i]);
+		}
+	}
+	return output;
+};
+
+/**
+ * Defines a Linear Matrix
+ *
+ * @constructor
+ */
 function Matrix() {
 	this.values = arguments;
 }
 
+/**
+ * Multiplies this {@link Matrix} by another matrix {@link Matrix}
+ *
+ * @param matrix {Matrix} Matrix to multiply against this matrix
+ * @return {Matrix} This Matrix after the multiplication
+ */
 Matrix.prototype.multiply = function (matrix) {
 	var _thisRows = this.values.length;
 	var _thisColumns = this.values[0].length;
 	var matrixColumns = matrix.values[0].length;
-	var multiple = new Array(_thisRows);  // initialize array of rows
+	var matrixRows = matrix.values.length;
+	if (_thisColumns !== matrixRows)
+		throw new Error("The number of columns in A must match the number of rows in B");
+	var _thisDuplicate = Array.deepCopy(this.values);
+	this.values = new Array(_thisRows);  // initialize array of rows
 	for (var r = 0; r < _thisRows; ++r) {
-		multiple[r] = new Array(matrixColumns); // initialize the current row
+		this.values[r] = new Array(matrixColumns); // initialize the current row
 		for (var c = 0; c < matrixColumns; ++c) {
-			multiple[r][c] = 0;             // initialize the current cell
+			this.values[r][c] = 0;             // initialize the current cell
 			for (var i = 0; i < _thisColumns; ++i) {
-				multiple[r][c] += this.values[r][i] * matrix.values[i][c];
+				this.values[r][c] += _thisDuplicate[r][i] * matrix.values[i][c];
 			}
 		}
 	}
-	return multiple;
+	return this;
 };
 
-Matrix.prototype.subtract = function(matrix) {
-	//TODO
+/**
+ * Subtracts a {@link Matrix} from this {@link Matrix}
+ *
+ * @param matrix {Matrix} Matrix to subtract from this Matrix
+ * @return {Matrix} This Matrix after the subtraction
+ */
+Matrix.prototype.subtract += function(matrix) {
+	var _thisRows = this.values.length;
+	var _thisColumns = this.values[0].length;
+	var matrixColumns = matrix.values[0].length;
+	var matrixRows = matrix.values.length;
+	if (_thisColumns !== matrixColumns && _thisRows !== matrixRows)
+		throw new Error("The number of rows and columns in A must match the number of rows and columns in B");
+	for (var i = 0; i < matrixRows; i++) {
+		for (var o = 0; o < matrixColumns; o++) {
+			this.values[i][o] += matrix[i][o];
+		}
+	}
+	return this;
 };
 
+/**
+ * Adds a {@link Matrix} to this {@link Matrix}
+ *
+ * @param matrix {Matrix} Matrix to add to this Matrix
+ * @return {Matrix} This Matrix after the addition
+ */
 Matrix.prototype.add = function(matrix) {
-	//TODO
+	var _thisRows = this.values.length;
+	var _thisColumns = this.values[0].length;
+	var matrixColumns = matrix.values[0].length;
+	var matrixRows = matrix.values.length;
+	if (_thisColumns !== matrixColumns && _thisRows !== matrixRows)
+		throw new Error("The number of rows and columns in A must match the number of rows and columns in B");
+	for (var i = 0; i < matrixRows; i++) {
+		for (var o = 0; o < matrixColumns; o++) {
+			this.values[i][o] += matrix[i][o];
+		}
+	}
+	return this;
 };
 
 
 /**
  * Defines an RGBA Color
  *
- * @param red
- * @param green
- * @param blue
- * @param alpha
+ * @param red {number=} Red channel of the color (where r belongs to all Z and 0 >= r <= 255)
+ * @param green {number=} Green channel of the color (where g belongs to all Z and 0 >= g <= 255)
+ * @param blue {number=} Blue channel of the color (where b belongs to all Z and 0 >= b <= 255)
+ * @param alpha {number=} Alpha channel of the color (opacity where a belongs to all Q and 0 >= a <= 1)
  * @constructor
  */
 function Color(red, green, blue, alpha) {
@@ -66,13 +162,23 @@ Color.prototype.getRgba = function () {
 	var rgba = "rgba(";
 	rgba += (this.red ? this.red : 0) + ",";
 	rgba += (this.green ? this.green : 0) + ",";
-	rgba += (this.blue ? this.blue : 0) + ",";
-	rgba += (this.alpha ? this.alpha : 0) + ")";
-	return rgba;
+	rgba += (this.blue ? this.blue : 0);
+	if (this.alpha !== 1)
+		rgba += "," + (this.alpha ? this.alpha : 0);
+	return rgba + ")";
 };
 
-Color.modifyBrightness = function (color, factor) {
+/**
+ * Changes the brightness of the {@link Color} based on the magnitude provided
+ *
+ * @param factor {Matrix|number} Factor to change the brightness of the {@link Color}
+ * @param color {Color} Color to change the brightness of
+ * @return {Color} Color with a brightness modified by a factor
+ */
+Color.modifyBrightness = function (factor, color) {
 	var colorMatrix = new Matrix(color.red, color.green, color.blue);
+	if (!(factor instanceof Matrix))
+		factor = new Matrix([factor, factor, factor]);
 	if (factor < 0) {
 		factor = 1 + factor;
 		colorMatrix.multiply(factor);
@@ -87,7 +193,8 @@ Color.modifyBrightness = function (color, factor) {
 };
 
 /**
- * Enum that defines
+ * Enum that defines types of Colorblindnesses
+ *
  * @constructor
  */
 function ColorblindnessType() {
@@ -123,7 +230,8 @@ function ColorCorrector(element, color) {
  * Performs color correction to the {@link #element} based on the {@link #color}
  */
 ColorCorrector.prototype.correct = function () {
-	this.element.style.color = this._colorShift.getHexadecimal();
+	this._colorShift = Color.modifyBrightness(2, this._colorShift);
+	this.element.style.color = this._colorShift.getRgba();
 };
 
 /**
