@@ -51,7 +51,11 @@ Array.deepCopy = function(arr) {
  * @constructor
  */
 function Matrix() {
-	this.values = arguments;
+	if (arguments) {
+		this.values = [];
+		for (var i = 0; i < arguments.length; i++)
+			this.values.push(arguments[i]);
+	}
 }
 
 /**
@@ -87,7 +91,7 @@ Matrix.prototype.multiply = function (matrix) {
  * @param matrix {Matrix} Matrix to subtract from this Matrix
  * @return {Matrix} This Matrix after the subtraction
  */
-Matrix.prototype.subtract += function(matrix) {
+Matrix.prototype.subtract = function(matrix) {
 	var _thisRows = this.values.length;
 	var _thisColumns = this.values[0].length;
 	var matrixColumns = matrix.values[0].length;
@@ -123,6 +127,28 @@ Matrix.prototype.add = function(matrix) {
 	return this;
 };
 
+/**
+ * Transposes the values of the matrix
+ *
+ * @return {Matrix} This Matrix after the transposition
+ */
+Matrix.prototype.transpose = function() {
+	var _thisRows = this.values.length;
+	var _thisColumns = this.values[0].length;
+	var _thisCopy = Array.deepCopy(this.values);
+	if (_thisColumns > _thisRows)
+		this.values.push([]);
+	for (var i = 0; i < _thisRows; i++) {
+		if (_thisRows > _thisColumns)
+			this.values[i].push(null); //TODO Test and complete this
+		for (var o = 0; o < _thisColumns; o++) {
+			var copy = _thisCopy[i][o];
+			this.values[i][o] = _thisCopy[o][i];
+			this.values[o][i] = copy;
+		}
+	}
+	return this;
+};
 
 /**
  * Defines an RGBA Color
@@ -189,7 +215,7 @@ Color.modifyBrightness = function (factor, color) {
 		rgbMatrix.multiply(factor);
 		colorMatrix.add(rgbMatrix);
 	}
-	return Color.apply(colorMatrix);
+	return Color.apply(this, [colorMatrix]);
 };
 
 /**
